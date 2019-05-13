@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.demo.VotingMapper">
+	<select id="selectExemSeq" resultType="Long"> 
+		SELECT nextval('seq_exem_id') 
+	</select>	
+	<select id="selectQuestionSeq" resultType="Long"> 
+		SELECT nextval('seq_question_id')
+	</select>
+	<select id="selectItemSeq" resultType="Long"> 
+		SELECT nextval('seq_item_id')
+	</select>
+	
+	<select id="findAll" resultType="HashMap"> 
+		select id, name from users 
+	</select>
+	
+	<select id="selectExemList" parameterType="com.example.demo.VotingVO" 
+	resultType="com.example.demo.VotingVO">
+	 	<![CDATA[
+            SELECT *
+              FROM (SELECT ROW_NUMBER() OVER() as rNum
+                         , exem_id as exem_link
+                         , exem_id
+	 			 		 , exem_nm
+	 					 , exem_type
+	 					 , question_total_count
+	 					 , exem_status
+	 					 , to_char(start_date, 'YYYY-MM-DD') as start_date
+	 					 , to_char(end_date, 'YYYY-MM-DD') as end_date
+	 					 , exec_desc
+	 					 , modifier
+                      FROM vote_exem_master
+                      LIMIT #{endRowNum}
+                   ) aa
+                 , (SELECT COUNT(*)		as rowCnt
+                      FROM vote_exem_master
+                   ) bb
+             WHERE aa.rNum >= #{startRowNum}
+
+        ]]>
+        
+              <if test="(searchField != null or searchField != '') and (searchString != null and searchString != '') ">
+                <choose>
+                  <when test='searchOper == "in"'>
+                    AND aa.${searchField} like '%${searchString}%'
+                  </when>
+                  <when test='searchOper == "eq"'>
+                    AND aa.${searchField} = #{searchString}
+                  </when>
+                </choose>
+              </if>
+              <choose>
+                <when test='sidx != null and sord == "asc"'>
+                    ORDER BY aa.${sidx} asc
+                </when>
+                <otherwise>
+                    ORDER BY aa.${sidx} desc
+                </otherwise>
+              </choose>
+	</select>
+	<select id="selectExemQuestionList" parameterType="com.example.demo.VotingVO"
+		resultType="com.example.demo.VotingVO">
+	 	<![CDATA[
+            SELECT 		question_id
+	 			 		 , question_nm
+	 					 , question_order
+	 					 , question_type
+	 					 , correct_answer
+	 					 , question_desc
+	 					 , modifier
+            FROM vote_question_master
+            WHERE exem_id = #{exem_id}
+            order by question_order
+
+        ]]>
+	</select>
+	<select id="selectQuestionList" parameterType="com.example.demo.VotingVO"
+		resultType="com.example.demo.VotingVO">
+	 	<![CDATA[
+            SELECT * FROM (SELECT ROW_NUMBER() OVER() as rNum
+                         , question_id
+	 			 		 , question_nm
+	 					 , question_order
+	 					 , question_type
+	 					 , correct_answer
+	 					 , question_desc
+	 					 , modifier
+                      FROM vote_question_master
+                      WHERE exem_id = #{exem_id}
+                      LIMIT #{endRowNum}
+                   ) aa
+                 , (SELECT COUNT(*)		as rowCnt
+                      FROM vote_question_master
+                      WHERE exem_id = #{exem_id}
+                   ) bb
+             WHERE aa.rNum >= #{startRowNum}
+             
+
+        ]]>
+        
+              <if test="(searchField != null or searchField != '') and (searchString != null and searchString != '') ">
+                <choose>
+                  <when test='searchOper == "in"'>
+                      AND aa.${searchField} like '%${searchString}%'
+                  </when>
+                  <when test='searchOper == "eq"'>
+                      AND aa.${searchField} = #{searchString}
+                  </when>
+                </choose>
+              </if>
+              <choose>
+                <when test='sidx != null and sord == "asc"'>
+                    ORDER BY aa.${sidx} asc
+                </when>
+                <when test='sidx != null'>
+                    ORDER BY aa.${sidx} desc
+                </when>
+              </choose>
+	</select>
+	<select id="selectItemList" parameterType="com.example.demo.VotingVO"
+		resultType="com.example.demo.VotingVO">
+	 	<![CDATA[
+            SELECT *
+              FROM (SELECT ROW_NUMBER() OVER() as rNum
+                         , item_id
+	 			 		 , item_nm
+	 					 , item_order
+	 					 , item_desc
+	 					 , modifier
+                      FROM vote_item_master                      
+                      WHERE 1 =1 
+                      and question_id = #{question_id}
+                      LIMIT #{endRowNum}
+                   ) aa
+                 , (SELECT COUNT(*)		as rowCnt
+                      FROM vote_item_master
+                      WHERE question_id = #{question_id}
+                   ) bb
+             WHERE aa.rNum >= #{startRowNum}
+             
+
+        ]]>
+        
+              <if test="(searchField != null or searchField != '') and (searchString != null and searchString != '') ">
+                <choose>
+                  <when test='searchOper == "in"'>
+                      AND aa.${searchField} like '%${searchString}%'
+                  </when>
+                  <when test='searchOper == "eq"'>
+                      AND aa.${searchField} = #{searchString}
+                  </when>
+                </choose>
+              </if>
+              <choose>
+                <when test='sidx != null and sord == "asc"'>
+                    --ORDER BY aa.${sidx} asc
+                </when>
+                <otherwise>
+                    --ORDER BY aa.${sidx} desc
+                </otherwise>
+              </choose>
+	</select>
+	<select id="selectQuestionHistoryList" parameterType="com.example.demo.VotingVO"
+		resultType="com.example.demo.VotingVO">
+	 	<![CDATA[
+            SELECT *
+              FROM (SELECT ROW_NUMBER() OVER() as rNum
+                         , item_id
+	 			 		 , item_nm
+	 					 , item_order
+	 					 , item_desc
+	 					 , modifier
+                      FROM vote_question_history                    
+                      WHERE 1 =1 
+                      LIMIT #{endRowNum}
+                   ) aa
+                 , (SELECT COUNT(*)		as rowCnt, exem_id, emp_id
+                      FROM vote_question_history
+                      WHERE exem_id = #{exem_id} 
+                      and emp_id = #{emp_id}
+                   ) bb
+             WHERE aa.rNum >= #{startRowNum}
+             and bb.exem_id = #{exem_id}
+             and bb.emp_id = #{emp_id}
+
+        ]]>
+        
+              <if test="(searchField != null or searchField != '') and (searchString != null and searchString != '') ">
+                <choose>
+                  <when test='searchOper == "in"'>
+                      AND aa.${searchField} like '%${searchString}%'
+                  </when>
+                  <when test='searchOper == "eq"'>
+                      AND aa.${searchField} = #{searchString}
+                  </when>
+                </choose>
+              </if>
+              <choose>
+                <when test='sidx != null and sord == "asc"'>
+                    ORDER BY ${sidx} asc
+                </when>
+                <otherwise>
+                    ORDER BY ${sidx} desc
+                </otherwise>
+              </choose>
+	</select>
+	
+	<!-- selectDetail -->
+	<select id="selectUserExemList" parameterType="com.example.demo.VotingVO"
+		resultType="com.example.demo.VotingVO">
+	 	<![CDATA[
+            SELECT exem_id
+                   , exem_nm
+                   , exem_type
+                   , question_total_count
+                   , exem_status
+				   , to_char(start_date, 'YYYY-MM-DD') AS start_date
+				   , to_char(end_date, 'YYYY-MM-DD') AS end_date
+                   , exec_desc
+                   , modifier
+              FROM vote_exem_master
+              WHERE exem_type = 'S'  
+              AND   exem_status = 'P'   
+              AND   end_date >= now()        
+        ]]>
+	</select>
+	<select id="selectUserQuestionList" parameterType="com.example.demo.VotingVO"
+		resultType="com.example.demo.VotingVO">
+	 	<![CDATA[
+            SELECT question_id, question_nm, exem_id, question_order
+            FROM vote_question_master
+            WHERE exem_id = #{exem_id} 
+            ORDER BY question_order asc       
+        ]]>
+	</select>
+	
+	<select id="selectUserItemList" parameterType="com.example.demo.VotingVO"
+		resultType="com.example.demo.VotingVO">
+	 	<![CDATA[
+            SELECT item_id, item_nm, question_id, item_order, item_desc, modifier
+            FROM vote_item_master
+            WHERE question_id = #{question_id} 
+            ORDER BY item_order asc      
+        ]]>
+	</select>
+
+	<!-- insert master code -->
+	<insert id="insert" parameterType="com.example.demo.VotingVO">
+	 	<![CDATA[
+            INSERT
+              INTO vote_exem_master
+                 ( exem_id
+                 , exem_nm
+                 , exem_type
+                 , question_total_count
+                 , exem_status
+                 , start_date
+                 , end_date
+                 , exec_desc
+                 , modifier
+                 )
+            VALUES
+                 ( #{exem_id}
+                 , #{exem_nm}
+                 , #{exem_type}
+                 , #{question_total_count}
+                 , #{exem_status}
+				 , to_timestamp(#{start_date},'yyyy-mm-dd') 
+                 , to_timestamp(#{end_date},'yyyy-mm-dd')
+                 , #{exec_desc}
+                 , #{modifier}
+                 )
+        ]]>
+	</insert>
+	<!-- insert master code -->
+	<insert id="insertQuestionMaster" parameterType="com.example.demo.VotingVO">
+	 	<![CDATA[
+            INSERT
+              INTO vote_question_master
+                 ( question_id
+                 , question_nm
+                 , exem_id
+                 , question_order
+                 , question_type
+                 , correct_answer
+                 , question_desc
+                 , modifier
+                 )
+            VALUES
+                 ( #{question_id}
+                 , #{question_nm}
+                 , #{exem_id}
+                 , #{question_order}
+                 , #{question_type}
+                 , #{correct_answer}
+                 , #{question_desc}
+                 , #{modifier}
+                 )
+        ]]>
+	</insert>
+	<!-- insert master code -->
+	<insert id="insertItemMaster" parameterType="com.example.demo.VotingVO">
+	 	<![CDATA[
+            INSERT
+              INTO vote_item_master
+                 ( item_id
+                 , item_nm
+                 , question_id
+                 , item_order
+                 , item_desc
+                 , modifier
+                 )
+            VALUES
+                 ( #{item_id}
+                 , #{item_nm}
+                 , #{question_id}
+                 , #{item_order}
+                 , #{item_desc}
+                 , #{modifier}
+                 )
+        ]]>
+	</insert>
+	<!-- insert master code -->
+	<insert id="insertQuestionHistroy" parameterType="com.example.demo.VotingVO">
+	 	<![CDATA[
+            INSERT
+              INTO vote_question_history
+                 ( question_id
+                 , question_seq
+                 , emp_id
+                 , exem_id
+                 , answer
+                 , right_answer_status
+                 , creation_date
+                 )
+            VALUES
+                 ( #{question_id}
+                 , (select coalesce(MAX(question_seq)+1, 1) as idd from vote_question_history where emp_id = #{emp_id} and question_id = #{question_id})
+                 , #{emp_id}
+                 , #{exem_id}
+                 , #{answer}
+                 , #{right_answer_status}
+                 , now()
+                 )
+        ]]>
+	</insert>
+	
+
+	<!-- update master Data -->
+	<update id="update" parameterType="com.example.demo.VotingVO">
+	 	<![CDATA[
+            UPDATE vote_exem_master
+               SET exem_nm      	     = #{exem_nm}
+                 , exem_type       		 = #{exem_type}
+                 , question_total_count  = #{question_total_count}
+                 , exem_status       	 = #{exem_status}
+                 , start_date       	 = to_timestamp(#{start_date},'yyyy-mm-dd') 
+                 , end_date       		 = to_timestamp(#{end_date},'yyyy-mm-dd')
+                 , exec_desc       		 = #{exec_desc}
+                 , modifier       		 = #{modifier}
+             WHERE exem_id 		 = #{exem_id}
+        ]]>
+	</update>
+	
+	<!-- update master Data -->
+	<update id="updateQuestionMaster" parameterType="com.example.demo.VotingVO">
+	 	<![CDATA[
+            UPDATE vote_question_master
+               SET question_nm      	 = #{question_nm}
+                 , exem_id       		 = #{exem_id}
+                 , question_order        = #{question_order}
+                 , question_type       	 = #{question_type}
+                 , correct_answer        = #{correct_answer}
+                 , question_desc       	 = #{question_desc}
+                 , modifier       		 = #{modifier}
+             WHERE question_id 		 = #{question_id}
+        ]]>
+	</update>
+	
+	<!-- update master Data -->
+	<update id="updateItemMaster" parameterType="com.example.demo.VotingVO">
+	 	<![CDATA[
+            UPDATE vote_item_master
+               SET item_nm      	 = #{item_nm}
+                 , question_id       = #{question_id}
+                 , item_order        = #{item_order}
+                 , item_desc       	 = #{item_desc}
+                 , modifier       	 = #{modifier}
+             WHERE question_id 		 = #{question_id}
+             and item_id 		 	 = #{item_id}
+        ]]>
+	</update>
+	
+	<!-- update master Data -->
+	<update id="updateQuestionHistory" parameterType="com.example.demo.VotingVO">
+	 	<![CDATA[
+            UPDATE vote_question_history
+               SET exem_id      	 	= #{exem_id}
+                 , answer       		= #{answer}
+                 , right_answer_status  = #{right_answer_status}
+                 , creation_date       	= sysdate
+             WHERE question_id 		 	= #{question_id}
+             and emp_id 		 		= #{emp_id}
+             and question_seq 		 	= #{question_seq}
+        ]]>
+	</update>
+	
+	<!-- delete detail Data -->
+	<delete id="delete" parameterType="com.example.demo.VotingVO">
+	 	<![CDATA[
+             DELETE
+               FROM vote_exem_master
+              WHERE exem_id IN
+        ]]>
+        <foreach collection="list" item="item" index="index" open="(" separator="," close=")">
+             #{item.exem_id}
+        </foreach>
+	</delete>
+	
+	<!-- delete detail Data -->
+	<delete id="deleteQuestionMaster" parameterType="com.example.demo.VotingVO">
+	 	<![CDATA[
+             DELETE
+               FROM vote_question_master
+              WHERE question_id IN
+        ]]>
+        <foreach collection="list" item="item" index="index" open="(" separator="," close=")">
+             #{item.question_id}
+        </foreach>
+	</delete>
+	
+	<!-- delete detail Data -->
+	<delete id="deleteItemMaster" parameterType="com.example.demo.VotingVO">
+	 	<![CDATA[
+             DELETE
+               FROM vote_item_master
+              WHERE item_id IN
+        ]]>
+        <foreach collection="list" item="item" index="index" open="(" separator="," close=")">
+             #{item.item_id}
+        </foreach>
+	</delete>
+	
+	
+	<!-- delete detail Data -->
+	<delete id="deleteQestionHistory" parameterType="com.example.demo.VotingVO">
+	 	<![CDATA[
+             DELETE
+               FROM vote_question_history
+              WHERE emp_id = #{emp_id}
+              and question_id IN
+        ]]>
+        <foreach collection="list" item="item" index="index" open="(" separator="," close=")">
+             #{item.question_id}
+        </foreach>
+	</delete>
+</mapper>
